@@ -286,6 +286,7 @@ class pil_build_ext(build_ext):
             "lcms",
             "webp",
             "webpmux",
+            "avif",
             "jpeg2000",
             "imagequant",
         ]
@@ -681,6 +682,12 @@ class pil_build_ext(build_ext):
                 ):
                     feature.webpmux = "libwebpmux"
 
+        if feature.want("avif"):
+            _dbg("Looking for avif")
+            if _find_include_file(self, "avif/avif.h"):
+                if _find_library_file(self, "avif"):
+                    feature.avif = "avif"
+
         for f in feature:
             if not getattr(feature, f) and feature.require(f):
                 if f in ("jpeg", "zlib"):
@@ -769,6 +776,12 @@ class pil_build_ext(build_ext):
                 )
             )
 
+        if feature.avif:
+            libs = [feature.avif, "aom"]
+            exts.append(
+                Extension("PIL._avif", sources=["src/_avif.c"], libraries=libs)
+            )
+
         tk_libs = ["psapi"] if sys.platform == "win32" else []
         exts.append(
             Extension(
@@ -813,6 +826,7 @@ class pil_build_ext(build_ext):
             (feature.lcms, "LITTLECMS2"),
             (feature.webp, "WEBP"),
             (feature.webpmux, "WEBPMUX"),
+            (feature.avif, "AVIF"),
         ]
 
         all = 1
